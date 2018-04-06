@@ -1,8 +1,7 @@
 use raw::*;
 use compile::Compile;
 use function::Abi;
-use alloc::oom;
-use libc::{c_char, c_uint, c_void};
+use std::os::raw::{c_char, c_uint, c_void};
 use util::{from_ptr, from_ptr_opt};
 use std::borrow::*;
 use std::marker::PhantomData;
@@ -10,34 +9,36 @@ use std::{fmt, mem, str};
 use std::iter::IntoIterator;
 use std::ffi::{self, CString};
 use std::ops::{Deref, DerefMut};
+use std::process::abort;
 
 pub use kind::TypeKind;
 /// The integer representation of a type
 pub mod kind {
-    use libc::c_int;
+    #![allow(non_upper_case_globals)]
+    use std::os::raw::c_int;
     bitflags!(
-        flags TypeKind: c_int {
-            const Void = 0,
-            const SByte = 1,
-            const UByte = 2,
-            const Short = 3,
-            const UShort = 4,
-            const Int = 5,
-            const UInt = 6,
-            const NInt = 7,
-            const NUInt = 8,
-            const Long = 9,
-            const ULong = 10,
-            const Float32 = 11,
-            const Float64 = 12,
-            const NFloat = 13,
-            const Struct = 14,
-            const Union = 15,
-            const Signature = 16,
-            const Pointer = 17,
-            const FirstTagged = 2,
-            const SysBool = 10009,
-            const SysChar = 10010
+        pub struct TypeKind: c_int {
+            const Void = 0;
+            const SByte = 1;
+            const UByte = 2;
+            const Short = 3;
+            const UShort = 4;
+            const Int = 5;
+            const UInt = 6;
+            const NInt = 7;
+            const NUInt = 8;
+            const Long = 9;
+            const ULong = 10;
+            const Float32 = 11;
+            const Float64 = 12;
+            const NFloat = 13;
+            const Struct = 14;
+            const Union = 15;
+            const Signature = 16;
+            const Pointer = 17;
+            const FirstTagged = 2;
+            const SysBool = 10009;
+            const SysChar = 10010;
         }
     );
 }
@@ -366,7 +367,7 @@ impl Type {
     /// Create a type descriptor for a function signature.
     pub fn new_signature(abi: Abi, return_type: &Ty, params: &mut [&Ty]) -> Type {
         unsafe {
-            let mut params:&mut [jit_type_t] = mem::transmute(params);
+            let params:&mut [jit_type_t] = mem::transmute(params);
             let signature = jit_type_create_signature(abi as jit_abi_t, return_type.into(), params.as_mut_ptr(), params.len() as c_uint, 1);
             from_ptr(signature)
         }
@@ -453,7 +454,7 @@ impl Ty {
                             .map(|name| name.as_bytes().as_ptr() as *mut c_char)
                             .collect::<Vec<_>>();
             if jit_type_set_names(self.into(), c_names.as_mut_ptr(), names.len() as u32) == 0 {
-                oom();
+                abort();
             }
         }
     }

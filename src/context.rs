@@ -1,11 +1,11 @@
 use raw::*;
-use alloc::oom;
 use function::Func;
 use util::{from_ptr, from_ptr_opt};
 use std::marker::PhantomData;
 use std::{mem, ptr};
 use std::ops::{Index, IndexMut};
 use std::iter::IntoIterator;
+use std::process::abort;
 /// Holds all of the functions you have built and compiled. There can be
 /// multiple, but normally there is only one.
 ///
@@ -35,7 +35,7 @@ pub struct Context<T = ()> {
 }
 native_ref!(Context<T>, _context: jit_context_t, marker = PhantomData);
 
-impl<T = ()> Index<i32> for Context<T> {
+impl<T> Index<i32> for Context<T> {
     type Output = T;
     fn index(&self, index: i32) -> &T {
         unsafe {
@@ -47,14 +47,14 @@ impl<T = ()> Index<i32> for Context<T> {
         }
     }
 }
-impl<T = ()> IndexMut<i32> for Context<T> {
+impl<T> IndexMut<i32> for Context<T> {
     fn index_mut(&mut self, index: i32) -> &mut T {
         unsafe {
             let meta = jit_context_get_meta(self.into(), index);
             if meta.is_null() {
                 let boxed = Box::new(mem::uninitialized::<T>());
                 if jit_context_set_meta(self.into(), index, mem::transmute(boxed), Some(::free_data::<T>)) == 0 {
-                    oom()
+                    abort()
                 } else {
                     mem::transmute(jit_context_get_meta(self.into(), index))
                 }
@@ -64,7 +64,7 @@ impl<T = ()> IndexMut<i32> for Context<T> {
         }
     }
 }
-impl<T = ()> Context<T> {
+impl<T> Context<T> {
     #[inline(always)]
     /// Create a new JIT Context
     pub fn new() -> Context<T> {

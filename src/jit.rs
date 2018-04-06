@@ -23,38 +23,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#![crate_name = "jit"]
-#![allow(raw_pointer_derive, non_camel_case_types, non_upper_case_globals)]
 #![deny(unused_attributes, dead_code, unused_parens, unknown_lints, unreachable_code, unused_allocation, unused_allocation, unused_must_use)]
-#![feature(alloc, core, plugin, unboxed_closures, optin_builtin_traits, associated_consts)]
-#![plugin(rustc_bitflags)]
+#![feature(optin_builtin_traits)]
 
 //! This crate wraps LibJIT in an idiomatic style.
-//! For example, here's a quick example which makes a multiply function using LibJIT:
 //!
-//! ```rust
-//! extern crate jit;
-//! #[no_link] #[macro_use]
-//! extern crate jit_macros;
-//! use jit::*;
-//! fn main() {
-//!     // make a new context to make functions on
-//!     let mut ctx = Context::<()>::new();
-//!     jit_func!(&mut ctx, func, fn(x: isize, y: isize) -> isize {
-//!         func.insn_return(x * y);
-//!     }, {
-//!         assert_eq!(func(4, 5), 20);
-//!         assert_eq!(func(-2, -4), 8);
-//!     });
-//! }
-//! ```
-#[no_link] #[macro_use]
-extern crate rustc_bitflags;
-extern crate alloc;
+//! Unfortunately in order to fix compilation, I (Techcable) had to remove the macros :(
 extern crate libc;
 extern crate libjit_sys as raw;
+#[macro_use]
+extern crate bitflags;
 use raw::*;
-use libc::c_void;
+use std::os::raw::c_void;
 use std::mem;
 pub use compile::Compile;
 pub use context::Context;

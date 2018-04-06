@@ -60,14 +60,19 @@ impl<'a, T> Compile<'a> for &'a T where T:Compile<'a> + Sized {
         Type::new_pointer(&get::<T>()).into()
     }
 }
-
+#[repr(C)]
+struct RawSlice<T> {
+    data: *const T,
+    len: usize
+}
 impl<'a> Compile<'a> for &'a str {
     #[inline(always)]
     fn compile(self, func:&UncompiledFunction<'a>) -> &'a Val {
         unsafe {
-            use std::raw::Repr;
             use std::mem::transmute as cast;
-            let slice = self.repr();
+            let slice = cast::<&'a str, RawSlice<u8>>(self);
+            assert_eq!(slice.data, self.as_ptr());
+            assert_eq!(slice.len, self.len());
             let ty = <&'a str as Compile<'a>>::get_type();
             let structure = Val::new(func, &ty);
             let offset_data = cast::<_, usize>(&slice.data) - cast::<_, usize>(&slice);
@@ -79,10 +84,9 @@ impl<'a> Compile<'a> for &'a str {
     }
     #[inline(always)]
     fn get_type() -> CowType<'a> {
-        use std::raw::Slice;
         let ty = Type::new_struct(&mut [&get::<&'static u8>(), &get::<usize>()]);
         unsafe {
-            jit_type_set_size_and_alignment((&ty).into(), mem::size_of::<Slice<u8>>() as i64, mem::align_of::<Slice<u8>>() as i64);
+            jit_type_set_size_and_alignment((&ty).into(), mem::size_of::<RawSlice<u8>>() as i64, mem::align_of::<RawSlice<u8>>() as i64);
         }
         ty.into()
     }

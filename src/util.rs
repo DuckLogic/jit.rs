@@ -1,6 +1,8 @@
-use libc::*;
+use std::os::raw::*;
+use libc::{fdopen, pipe, fclose, fgets, FILE};
 use std::fmt::Error;
 use std::{mem, str};
+use std::process::abort;
 
 pub fn dump<F>(cb: F) -> Result<String, Error> where F:FnOnce(*mut FILE) {
     unsafe {
@@ -41,9 +43,8 @@ pub fn from_ptr_opt<R>(ptr: *mut c_void) -> Option<R> where R:From<*mut c_void> 
     }
 }
 pub fn from_ptr_oom<R>(ptr: *mut c_void) -> R where R:From<*mut c_void> {
-    use alloc::oom;
     if ptr.is_null() {
-        oom();
+        abort()
     } else {
         from_ptr(ptr)
     }

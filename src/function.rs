@@ -6,12 +6,7 @@ use types::Ty;
 use insn::Block;
 use value::Val;
 use util::{self, from_ptr, from_ptr_opt, from_ptr_oom};
-use libc::{
-    c_char,
-    c_int,
-    c_uint,
-    c_void
-};
+use std::os::raw::{c_char, c_int, c_uint, c_void};
 use std::default::Default;
 use std::fmt;
 use std::ops::{Deref, DerefMut, Index};
@@ -40,16 +35,16 @@ impl Default for Abi {
 }
 /// Call flags to a function
 pub mod flags {
-    use libc::c_int;
+    use std::os::raw::c_int;
     /// Call flags to a function
     bitflags!(
-        flags CallFlags: c_int {
+        pub struct CallFlags: c_int {
             /// When the function won't throw a value
-            const NO_THROW = 1,
+            const NO_THROW = 1;
             /// When the function won't return a value
-            const NO_RETURN = 2,
+            const NO_RETURN = 2;
             /// When the function is tail-recursive
-            const TAIL = 4
+            const TAIL = 4;
         }
     );
 }
@@ -736,7 +731,7 @@ impl<'a> UncompiledFunction<'a> {
     pub fn insn_call(&self, name:Option<&str>, func:&Func, sig:Option<&Ty>,
         args: &mut [&'a Val], flags: flags::CallFlags) -> &'a Val {
         unsafe {
-            let mut native_args:&mut [jit_value_t] = mem::transmute(args);
+            let native_args:&mut [jit_value_t] = mem::transmute(args);
             let c_name = name.map(|name| CString::new(name.as_bytes()).unwrap());
             let sig = mem::transmute(sig);
             from_ptr(jit_insn_call(
@@ -754,7 +749,7 @@ impl<'a> UncompiledFunction<'a> {
     pub fn insn_call_indirect(&self, func:&'a Val, signature: &Ty,
                                args: &mut [&'a Val], flags: flags::CallFlags) -> &'a Val {
         unsafe {
-            let mut native_args: &mut [jit_value_t] = mem::transmute(args);
+            let native_args: &mut [jit_value_t] = mem::transmute(args);
             from_ptr(jit_insn_call_indirect(
                 self.into(),
                 func.into(),
@@ -787,7 +782,7 @@ impl<'a> UncompiledFunction<'a> {
             }
         }
         unsafe {
-            let mut native_args:&mut [jit_value_t] = mem::transmute(args);
+            let native_args:&mut [jit_value_t] = mem::transmute(args);
             let c_name = name.map(|name| CString::new(name.as_bytes()).unwrap());
             from_ptr(jit_insn_call_native(
                 self.into(),
