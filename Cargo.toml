@@ -22,3 +22,5 @@ bitflags = "^1.0.1"
 
 [dependencies.libjit-sys]
 path = "sys"
+
+[workspace]

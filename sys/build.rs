@@ -57,7 +57,7 @@ fn main() {
 		run(
 			Command::new("sh")
 				.current_dir(&submod_path)
-				.arg("auto_gen.sh"),
+				.arg("bootstrap"),
 			Some(INSTALL_AUTOTOOLS_MSG)
 		);
 		run(
