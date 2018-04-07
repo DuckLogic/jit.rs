@@ -518,6 +518,23 @@ impl<'a> UncompiledFunction<'a> {
             ))
         }
     }
+    /// Load an element of type elem_type from position index within the array starting at base_addr.
+    /// The effective address of the array element is `base_addr + index * sizeof(elem_type)`.
+    #[inline(always)]
+    pub fn insn_load_element(&self, base: &'a Val, index: &'a Val, elem_type: &Ty) -> &'a Val {
+        if cfg!(not(ndebug)) {
+            assert!(base.get_type().is_pointer(), "Base should be pointer, not a {:?}", base.get_type());
+            assert!(index.get_type().is_int(), "Index should be integer, not a {:?}", index.get_type());
+        }
+        unsafe {
+            from_ptr(jit_insn_load_elem(
+                self.into(),
+                base.into(),
+                index.into(),
+                elem_type.into()
+            ))
+        }
+    }
     #[inline(always)]
     /// Make an instruction that stores the contents of `val` into `dest`, where `dest` is a
     /// temporary value or local value
